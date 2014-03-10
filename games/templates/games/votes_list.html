@@ -1,0 +1,18 @@
+{% extends "games/base.html" %}
+
+{% block content %}
+<h1>Votes</h1>
+<table>
+<tr><th>game</th><th>votes</th></tr>
+{% for game, count in context.items %}
+    <td> {{ game }} </td>
+    <td> {{ count }} </td></tr>
+{% empty %}
+    <tr><td>No votes yet.</td></tr>
+{% endfor %}
+</table>
+
+<br/>
+<br/>
+
+{% endblock %}

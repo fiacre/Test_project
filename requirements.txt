@@ -1,0 +1,5 @@
+Django==1.6.2
+mysql-python
+django-shell-plus==1.1.5
+pytz
+

@@ -1,0 +1,11 @@
+{% extends "games/base.html" %}
+
+{% block content %}
+<form action="/games/vote/" method="post"> {% csrf_token %}
+{{ form.as_p }}
+{% for g in games %}
+<option value={{ g.title }}> {{ g.title }} </option>
+{% endfor %}
+<input type="submit" value="Vote" />
+</form>
+{% endblock %}

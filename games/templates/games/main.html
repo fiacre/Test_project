@@ -1,0 +1,19 @@
+{% extends "games/base.html" %}
+
+
+{% block content %}
+ {% if user.is_anonymous %}
+
+<div>login to vote or add a game, see this weeks votes or see waht games we have </div>
+ {% else %}
+
+<div>welcome to Nerdery XBox GameVille</div>
+<div>
+<ul>
+<li><a href="/games/vote_index/">Votes so far</a></li>
+<li><a href="/games/vote/">Vote here</a></li>
+<li><a href="/games/top_votes/">Top Votes This Week</a></li>
+<li><a href="/games/add/">Add a Game</a></li>
+</ul>
+ {% endif %}
+{% endblock %}

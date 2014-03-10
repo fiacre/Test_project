@@ -1,0 +1,21 @@
+{% extends "games/base.html" %}
+
+{% block content %}
+<h1>Games</h1>
+<p> We Own</p>
+<ul>
+{% for game in games %}
+    <li>{{ game.title }} - {{ game.created|date:"D d M Y" }} </li>
+{% empty %}
+    <li>We don't own any games??</li>
+{% endfor %}
+</ul>
+<p>Voted for</p>
+<ul>
+{% for g,c in added.items %}
+    <li>{{ g }} - {{ c }} Votes</li>
+{% empty %}
+    <li>No Votes Yet!</li>
+{% endfor %}
+</ul>
+{% endblock %}
