@@ -113,14 +113,16 @@ def vote_index(request):
         sloppy date handling
         refactor
     """
+    context = {}
     d = datetime.now().weekday()
     if d <= 4:
         # if today is Mon ... Fri 
-        context = Vote.objects.values('game').annotate(vcount=Count('game'))
-        context.filter(created__gte=datetime.now()-timedelta(days=d))
-    else:
-        context = []
-        
+        votes = Vote.objects.values('game').annotate(vcount=Count('game'))
+        votes = votes.filter(created__gte=datetime.now()-timedelta(days=d))
+        for vote in votes:
+            game = Game.objects.get(pk=vote.get('game'))
+            if game.owned == False:
+                context[game.title] = vote.get('vcount')
     return render(request, 'games/votes_list.html', {"context" : context })
 
 
