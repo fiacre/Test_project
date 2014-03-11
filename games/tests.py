@@ -22,6 +22,7 @@ class GamesTests(TestCase):
     ''' boilerplate test case '''
     def setUp(self):
         self.factory = RequestFactory()
+        # create some users 
         self.user = User.objects.create_user('jim', 'jim@localhost.com', 'nat')
         self.user1 = User.objects.create_user('kim', 'kim@localhost.com', 'nat')
         self.user2 = User.objects.create_user('joe', 'joe@localhost.com', 'nat')
@@ -29,6 +30,22 @@ class GamesTests(TestCase):
         self.user4 = User.objects.create_user('sam', 'sam@localhost.com', 'nat')
         self.user5 = User.objects.create_user('tam', 'tam@localhost.com', 'nat')
         self.user6 = User.objects.create_user('bob', 'bob@localhost.com', 'nat')
+        self.user7 = User.objects.create_user('rob', 'rob@localhost.com', 'nat')
+        self.user8 = User.objects.create_user('sob', 'sob@localhost.com', 'nat')
+        self.user9 = User.objects.create_user('tob', 'tob@localhost.com', 'nat')
+        #create some games
+        request = self.factory.post( '/games/add/',
+            { 'title' : 'a good test title 123' } )
+        request.user = self.user
+        response=game_add(request)
+        self.assertEqual(response.status_code, 200)
+        request = self.factory.post( '/games/add/',
+            { 'title' : 'a good test title 234' } )
+        request.user = self.user1
+        response=game_add(request)
+        self.assertEqual(response.status_code, 200)
+        # now user and user1 CAN'T add or vote
+
 
 
     def test_login(self):
@@ -60,16 +77,16 @@ class GamesTests(TestCase):
         self.assertNotIsInstance(vote, Game)
 
     def test_ual(self):
-        game = Game(title='Game in UAL', user=self.user)
+        game = Game(title='Game in UAL', user=self.user3)
         game.save()
         action = 'added',
-        user = self.user
+        user = self.user3
         ual = UserActivityLog(game=game, user=user, action=action)
         ual.save()
         self.assertIsInstance(ual, UserActivityLog)
 
         UserActivityLog.log_user_action(user, action, game)
-        last_acted = UserActivityLog.last_acted(self.user)
+        last_acted = UserActivityLog.last_acted(self.user3)
         print last_acted 
 
         self.assertIsInstance(last_acted, datetime)
@@ -79,69 +96,71 @@ class GamesTests(TestCase):
     def test_game_add_form(self):
         form = GameAddForm(data={'title' : 'form game example', 
             'owned' : False,
-            'user' : self.user1 })
+            'user' : self.user4 })
         self.assertEqual(form.is_valid(), True)
 
     def test_add_game(self):
         ''' add a game with via POST '''
         request = self.factory.post('/games/add/', 
             { 'title' : 'a test title', })
-        request.user = self.user3
+        request.user = self.user5
         response = game_add(request)
         
         self.assertEqual(response.status_code, 200)
 
 
-    @unittest.skip("problem with form")
     def test_vote_twice_in_day(self):
         ''' POST two games within 30 minutes
             second POST should barf
         '''
         created_one = datetime.now(pytz.UTC)
         request = self.factory.post( '/games/vote/',
-            { 'title' : 'A Test Title 123' })
-        request.user = self.user4 
+            { 'title' : 1 })
+        request.user = self.user6 
         response = game_vote(request)
         self.assertEqual(response.status_code, 200)
 
 
         request = self.factory.post( '/games/vote/',
-            { 'title' : 'Another Test Title 123' } )
-        request.user = self.user4 
+            { 'title' : 2 } )
+        request.user = self.user6 
         response = game_vote(request)
         
         self.assertNotEqual(response.status_code, 200) 
 
-    def test_add_owned_title(self):
+    def test_add_added_title(self):
         request = self.factory.post( '/games/add/',
-            { 'title' : 'a good test title', 'owned' : True } )
-        request.user = self.user
+            { 'title' : 'a good test title' } )
+        request.user = self.user7
         response=game_add(request)
         self.assertEqual(response.status_code, 200)
 
         request = self.factory.post( '/games/add/',
             { 'title' : 'a good test title' } )
-        request.user = self.user1
+        request.user = self.user7
         response=game_add(request)
+
+        print response.status_code
+
+
         self.assertNotEqual(response.status_code, 200)
         
-    @unittest.skip("problem with POST")
     def test_add_and_vote(self):
         request = self.factory.post( '/games/add/',
             { 'title' : "A Test Title 234" } )
-        request.user = self.user5
+        request.user = self.user8
         response=game_add(request)
         #self.assertEqual(response.status_code, 200)
         
         request = self.factory.post( '/games/vote/',
-            { 'title' : 'another random test title' })
-        request.user = self.user5
+            { 'title' : 1 })
+        request.user = self.user8
         response = game_vote(request)
         self.assertNotEqual(response.status_code, 200) 
 
     def test_vote_with_id(self):
         request = self.factory.get( '/games/vote/game_id/1/')
-        request.user = self.user6
+        request.user = self.user9
         response = game_vote(request, game_id=1)
         self.assertEqual(response.status_code, 200) 
         
