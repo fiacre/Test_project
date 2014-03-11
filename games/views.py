@@ -110,9 +110,18 @@ def main(request):
 def vote_index(request):
     """ votes view 
         show table of games and votes
+        sloppy date handling
+        refactor
     """
-    ordered = _count_votes()
-    return render(request, 'games/votes_list.html', {"context" : ordered })
+    d = datetime.now().weekday()
+    if d <= 4:
+        # if today is Mon ... Fri 
+        context = Vote.objects.values('game').annotate(vcount=Count('game'))
+        context.filter(created__gte=datetime.now()-timedelta(days=d))
+    else:
+        context = []
+        
+    return render(request, 'games/votes_list.html', {"context" : context })
 
 
 def top_votes(request):
