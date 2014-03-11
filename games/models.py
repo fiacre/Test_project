@@ -8,6 +8,10 @@ from django.contrib.auth.models import User as Auth_User
 import datetime 
 import pytz
  
+from django.conf import settings
+from django.utils.timezone import activate
+activate(settings.TIME_ZONE)
+ 
 class Game(models.Model):
     '''
         Game class

@@ -1,4 +1,5 @@
 # Django settings for nat project.
+import os
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -20,6 +21,7 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default.
     }
 }
+SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -29,13 +31,13 @@ ALLOWED_HOSTS = []
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'America/New_York'
+TIME_ZONE = 'US/Central'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
-""" maintina login/logout URL's """
+# login/logout URL's 
 LOGOUT_REDIRECT_URL='/'
 LOGIN_REDIRECT_URL='/'
 LOGIN_URL='/'
@@ -134,45 +136,68 @@ INSTALLED_APPS = (
     'shell_plus',
 )
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
     'formatters': {
-        'original': {
-            'format': '%(levelname)s %(asctime)s %(name)s %(funcName)s %(lineno)d: %(message)s'
-        }
+        'standard': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
     },
     'handlers': {
         'null': {
             'level':'DEBUG',
             'class':'django.utils.log.NullHandler',
         },
+        'logfile': {
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': SITE_ROOT + "/logfile",
+            'maxBytes': 50000,
+            'backupCount': 2,
+            'formatter': 'standard',
+        },
         'console':{
             'level':'DEBUG',
             'class':'logging.StreamHandler',
-            'formatter': 'original'
-        }
+            'formatter': 'standard'
+        },
     },
     'loggers': {
         'django': {
             'handlers':['console'],
             'propagate': True,
-            'level':'INFO',
+            'level':'DEBUG',
         },
-        'games': {
+        'django.db.backends': {
             'handlers': ['console'],
-            'propagate': True,
-            'level': 'DEBUG'
+            'level': 'ERROR',
+            'propagate': False,
         },
-        #'django.db.backends': {
-        #    'handlers':['console'],
-        #    'propagate': True,
-        #    'level':'INFO',
-        #},
+        'game': {
+            'handlers': ['console', 'logfile'],
+            'level': 'DEBUG',
+        },
     }
 }
+
+#LOGGING = {
+#    'version': 1,
+#    'disable_existing_loggers': True,
+#    'formatters': {
+#        'original': {
+#            'format': '%(levelname)s %(asctime)s %(name)s %(funcName)s %(lineno)d: %(message)s'
+#        }
+#    },
+#    'handlers': {
+#        'console':{
+#            'level':'DEBUG',
+#            'class':'logging.StreamHandler',
+#            'formatter': 'original'
+#        }
+#    },
+###}

@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta, date
 import pytz
+
 from collections import OrderedDict
 from django.http import Http404, HttpResponseServerError
 from django.shortcuts import render_to_response, HttpResponse
@@ -16,6 +17,12 @@ from django.views.generic import DetailView, ListView
 from games.forms import GameAddForm 
 from games.forms import GameVoteForm 
 from games.forms import VoteCountForm 
+
+
+from django.conf import settings
+from django.utils.timezone import activate
+activate(settings.TIME_ZONE)
+
 _log = logging.getLogger(__name__)
 
 # helper methods
@@ -40,9 +47,9 @@ def _can_act(user):
 
     if ual is None :
         return True
-    if ual.day == datetime.now(pytz.UTC).day:
+    if ual.day == datetime.now().day:
         return False
-    elif datetime.now(pytz.UTC).isoweekday() > 5:
+    elif datetime.now().isoweekday() > 5:
         ''' is it the weekend ? '''
         return False
     else:
@@ -85,10 +92,12 @@ def games(request):
     """
     added = _count_votes()
     games = Game.objects.filter(owned=True)
+    no_votes = Game.objects.filter(owned=False).exclude(id__in=Vote.objects.all().values_list('game', flat=True))
 
     return render(request, 'games/games.html', {
         'games' : games,
-        'added' : added
+        'added' : added,
+        'no_votes' : no_votes
         })
 
 def main(request):
@@ -141,37 +150,47 @@ def my_votes(request):
     return render(request, 'games/vote_list.html', {"votes" : votes })
 
 # methods below require a logged in user 
-# This could be more DRY
+# This definately could be more DRY ... just a first pass
 @login_required
-def game_vote(request, game_id = None):
+def game_vote(request, game_id=''):
     """ logged in user votes for a game here """
     _log.debug( "game_vote : user : %s" % request.user.username )
     if request.method == 'POST':
         form = GameVoteForm(request.POST)
         if form.is_valid():
             title = form.cleaned_data['title']
+            _log.debug("game_vote ; title is : %s " % title)
             #from title we get a Game 
+            # if this raises an error, let it throw 500
             game = Game.objects.get(title=title)
             # see if this user has voted or added today
             if _can_act(request.user.username) == False:
-                _log.debug("%s acted in the last 24 hours" % request.user)
+                _log.debug("%s acted today" % request.user)
                 response = _raise_error(reason="You Can Only Vote/Add once a day")
                 return response
              
             # remember to get out and vote! 
             # get the count (times this user has voted for this game )
-            num_votes= Vote.objects.filter(user=request.user, game=game).count()
+            num_votes= Vote.objects.filter(game=game).count()
             # update Vote with that count+1
             vote = Vote.objects.create(user=request.user, game=game, count=num_votes+1)
-            try:
-                vote.full_clean()
-            except ValidationError as e:
-                return _raise_error(str(e))
             vote.save()
             # make entry in user activity log
             UserActivityLog.log_user_action(request.user, "voted", game)
             #say thanks!
             return _say_thanks(request, "your vote for %s has been counted!" % title)
+    elif game_id is not None:
+        # if object does not exist, punt to 500 handler
+        game = Game.objects.get(pk=game_id)
+        if _can_act(request.user.username) == False:
+            _log.debug("%s acted in the last day" % request.user)
+            response = _raise_error(reason="You Can't Vote till tomorrow, sorry")
+            return response
+        else:
+            vote = Vote.objects.create(user=request.user, game=game, count=1)
+            vote.save()
+            UserActivityLog.log_user_action(request.user, "voted", game)
+            return _say_thanks(request, "your vote for %s has been counted!" % game.title)
     else:
         # if this is a GET, print form
         form = GameVoteForm()
@@ -186,7 +205,7 @@ def game_add(request):
         logged in user adds a game here 
         can't add a game if it is owned
         can't add a game if user
-            has voted or added in 24 hrs
+            has voted or added  today
         if user x adds, then user y adds
             count as a vote
     """
@@ -199,12 +218,23 @@ def game_add(request):
             # case-insensitive for now
             game_obj = Game.objects.filter(title__iexact=title, owned=True)
             if game_obj:
+                _log.error("%s is already owned" % title)
                 return _raise_error("%s is already owned" % title)
             
             # see if this game has been added
             game_obj = Game.objects.filter(title__iexact=title, owned=False)
             if game_obj:
-                return _raise_error("already owned")
+                #return _raise_error("already owned")
+                # this counts as a vote
+                if _can_act(request.user.username) == False:
+                    _log.debug("%s acted in the last 24 hours" % request.user)
+                    response = _raise_error(reason="You Can Only Vote/Add once a day")
+                    return response
+                num_votes= Vote.objects.filter(user=request.user, game=game).count()
+                vote = Vote.objects.create(user=request.user, game=game, count=num_votes+1)
+                vote.save()
+                UserActivityLog.log_user_action( request.user, "voted", vote )
+                return _say_thanks(request, "You Voted for %s" % title)
                 
             else:
                 # need a User

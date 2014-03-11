@@ -5,6 +5,10 @@ from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import pytz
 
+from django.conf import settings
+from django.utils.timezone import activate
+activate(settings.TIME_ZONE)
+
 # Create your tests here.
 from games.models import Game, Vote, UserActivityLog
 from games.views import login, games, main
