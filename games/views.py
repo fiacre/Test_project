@@ -230,10 +230,11 @@ def game_add(request):
                     _log.debug("%s acted in the last 24 hours" % request.user)
                     response = _raise_error(reason="You Can Only Vote/Add once a day")
                     return response
-                num_votes= Vote.objects.filter(user=request.user, game=game).count()
+                game = Game.objects.filter(title__iexact=title)[:1].get()
+                num_votes= Vote.objects.filter(user=request.user, game=game_obj).count()
                 vote = Vote.objects.create(user=request.user, game=game, count=num_votes+1)
                 vote.save()
-                UserActivityLog.log_user_action( request.user, "voted", vote )
+                UserActivityLog.log_user_action( request.user, "voted", game )
                 return _say_thanks(request, "You Voted for %s" % title)
                 
             else:
