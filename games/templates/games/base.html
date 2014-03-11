@@ -35,9 +35,10 @@
     <div id="content">
         {% block content %}{% endblock %}
     </div>
+    {% if user.is_authenticated %}
     <div id="content">
         <a href="/games/main/">Main</a>
     </div>
-
+    {% endif %}
 </body>
 </html>

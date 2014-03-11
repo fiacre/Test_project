@@ -12,6 +12,7 @@ from django.db.models import Count
 from django.contrib.auth.models import User
 from games.models import Game, Vote
 from games.models import UserActivityLog
+from django.views.generic import DetailView, ListView
 from games.forms import GameAddForm 
 from games.forms import GameVoteForm 
 from games.forms import VoteCountForm 
@@ -123,13 +124,24 @@ def top_votes(request):
         })
 
 
-# methods below require a logged in user 
-# This could be more DRY
+class AllVotes(ListView):
+    ''' example of geeric ListView 
+        list al vote and related objects
+    '''
+    model = Vote
+    context_object_name = 'votes'
+    template = 'games/vote_list.html'
+    queryset = Vote.objects.all().select_related('game', 'user').order_by('created')
+
+
 @login_required
 def my_votes(request):
     ''' see what I have added and voted for '''
-    pass
+    votes = Vote.objects.filter(user=request.user).select_related('game', 'user').order_by('-created')
+    return render(request, 'games/vote_list.html', {"votes" : votes })
 
+# methods below require a logged in user 
+# This could be more DRY
 @login_required
 def game_vote(request, game_id = None):
     """ logged in user votes for a game here """

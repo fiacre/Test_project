@@ -11,5 +11,7 @@ urlpatterns = patterns('',
     url(r'^vote/$', views.game_vote),
     url(r'^vote/game_id/(?P<game_id>\d+)/$', views.game_vote),
     url(r'^top_votes/$', views.top_votes),
+    url(r'^all_votes/$', views.AllVotes.as_view()),
+    url(r'^my_votes/$', views.my_votes),
     url(r'^add/$', views.game_add),
 )
