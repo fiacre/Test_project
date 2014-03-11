@@ -23,6 +23,8 @@ class GamesTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         # create some users 
+        # N.B I tried a DRY approach that hit a snag
+        # Testing is never DRY anyway, right??
         self.user = User.objects.create_user('jim', 'jim@localhost.com', 'nat')
         self.user1 = User.objects.create_user('kim', 'kim@localhost.com', 'nat')
         self.user2 = User.objects.create_user('joe', 'joe@localhost.com', 'nat')

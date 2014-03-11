@@ -13,11 +13,11 @@
 <p>Voted for</p>
 <ul>
 {% for g,c in added.items %}
-    <li>{{ g }} - {{ c }} Votes <div> <a href="/games/vote/game_id/{{ game.id }}/">Vote for {{g.title}}</a> </div></li>
+    <li>{{ g }} - {{ c }} Votes </li>
 {% endfor %}
 </ul>
-<ul>
 <p>Added</p>
+<ul>
 {% for game in no_votes %}
     <li>{{ game.title }} - {{ game.created|date:"D d M Y" }} <a href="/games/vote/game_id/{{ game.id }}/">Vote for {{game.title}}</a></li>
 {% empty %}

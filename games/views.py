@@ -179,7 +179,7 @@ def game_vote(request, game_id=''):
             UserActivityLog.log_user_action(request.user, "voted", game)
             #say thanks!
             return _say_thanks(request, "your vote for %s has been counted!" % title)
-    elif game_id is not None:
+    elif request.method == 'GET' and  game_id:
         # if object does not exist, punt to 500 handler
         game = Game.objects.get(pk=game_id)
         if _can_act(request.user.username) == False:
