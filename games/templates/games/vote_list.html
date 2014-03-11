@@ -1,0 +1,14 @@
+{% extends "games/base.html" %}
+
+{% block content %}
+
+    <p>Votes</p>
+
+    <ul>
+        <li>game | user  | created | count </li>
+        {% for vote in votes %}
+            <li>{{ vote.game }} | {{ vote.user }} | {{ vote.created }} | {{ vote.count }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
