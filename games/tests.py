@@ -18,7 +18,12 @@ class GamesTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.user = User.objects.create_user('jim', 'jim@localhost.com', 'nat')
-        self.alt_user = User.objects.create_user('joe', 'joe@localhost.com', 'nat')
+        self.user1 = User.objects.create_user('kim', 'kim@localhost.com', 'nat')
+        self.user2 = User.objects.create_user('joe', 'joe@localhost.com', 'nat')
+        self.user3 = User.objects.create_user('koe', 'koe@localhost.com', 'nat')
+        self.user4 = User.objects.create_user('sam', 'sam@localhost.com', 'nat')
+        self.user5 = User.objects.create_user('tam', 'tam@localhost.com', 'nat')
+        self.user6 = User.objects.create_user('bob', 'bob@localhost.com', 'nat')
 
 
     def test_login(self):
@@ -68,36 +73,18 @@ class GamesTests(TestCase):
 
     def test_game_add_form(self):
         form = GameAddForm(data={'title' : 'form game example', 
-            'owned' : False })
-        self.assertEqual(form.is_valid(), True)
-
-
-    def test_vote_added_form (self):
-        form = GameVoteForm(data={'game' : "Afor game game"})
+            'owned' : False,
+            'user' : self.user1 })
         self.assertEqual(form.is_valid(), True)
 
     def test_add_game(self):
         ''' add a game with via POST '''
-        request = self.factory.post('/games/add', 
+        request = self.factory.post('/games/add/', 
             { 'title' : 'a test title', })
-        request.user = self.user
-        response = game_vote(request)
+        request.user = self.user3
+        response = game_add(request)
         
         self.assertEqual(response.status_code, 200)
-        #self.assertEqual(response.status_code, 301)
-
-    def test_add_game_log(self):
-        my_user = User.objects.create_user('xyz', 'xyz@localhost.com', 'nat')
-        request = self.factory.post('/games/add',
-            { 'title' : 'xyz test title', })
-        request.user = my_user
-        response = game_vote(request)
-        self.assertEqual(response.status_code, 200)
-        ual = UserActivityLog.last_acted(my_user)
-        print ual
-        self.assertIsInstance(ual, datetime)
-        self.assertTrue(datetime.now(pytz.UTC) - ual < timedelta(seconds=5))
-
 
 
     def test_vote_twice_in_day(self):
@@ -105,21 +92,16 @@ class GamesTests(TestCase):
             second POST should barf
         '''
         created_one = datetime.now(pytz.UTC)
-        request = self.factory.post( '/games/vote',
-            { 'title' : 'one test title',
-                'created' : created_one,
-                'owned' : False })
-        request.user = self.user 
+        request = self.factory.post( '/games/vote/',
+            { 'title' : 'A Test Title 123' })
+        request.user = self.user4 
         response = game_vote(request)
         self.assertEqual(response.status_code, 200)
 
 
-        created_two = datetime.now(pytz.UTC) + timedelta(minutes=30)
-        request = self.factory.post( '/games/vote',
-            { 'title' : 'two test title',
-                'created' : created_two,
-                'owned' : False })
-        request.user = self.user
+        request = self.factory.post( '/games/vote/',
+            { 'title' : 'Another Test Title 123' } )
+        request.user = self.user4 
         response = game_vote(request)
         
         self.assertNotEqual(response.status_code, 200) 
@@ -133,23 +115,23 @@ class GamesTests(TestCase):
 
         request = self.factory.post( '/games/add/',
             { 'title' : 'a good test title' } )
-        request.user = self.alt_user
+        request.user = self.user1
         response=game_add(request)
         self.assertNotEqual(response.status_code, 200)
         
     def test_add_and_vote(self):
         request = self.factory.post( '/games/add/',
-            { 'title' : 'another good test title'} )
-        request.user = self.user
+            { 'title' : "A Test Title 234" } )
+        request.user = self.user5
         response=game_add(request)
-        self.assertEqual(response.status_code, 200)
+        #self.assertEqual(response.status_code, 200)
         
-        request = self.factory.post( '/games/vote',
-            { 'title' : 'random test title ',
-                'owned' : False })
-        request.user = self.user
+        request = self.factory.post( '/games/vote/',
+            { 'title' : 'another random test title' })
+        request.user = self.user5
         response = game_vote(request)
         self.assertNotEqual(response.status_code, 200) 
 
-    def test_add_twice_in_one_day(self):
-        pass
+
+
+

@@ -1,4 +1,4 @@
-""" views for Game and Vote models """
+import logging
 from datetime import datetime, timedelta, date
 import pytz
 from collections import OrderedDict
@@ -15,6 +15,7 @@ from games.models import UserActivityLog
 from games.forms import GameAddForm 
 from games.forms import GameVoteForm 
 from games.forms import VoteCountForm 
+_log = logging.getLogger(__name__)
 
 # helper methods
 
@@ -33,9 +34,14 @@ def _can_act(user):
         check the activity log
     '''
     ual = UserActivityLog.last_acted(user)
-    if ual and ual.day == datetime.now(pytz.UTC).day:
+
+    _log.debug("user %s activity log : %s " % (user, ual))
+
+    if ual is None :
+        return True
+    if ual.day == datetime.now(pytz.UTC).day:
         return False
-    elif datetime.now(pytz.UTC).isoweekday > 5:
+    elif datetime.now(pytz.UTC).isoweekday() > 5:
         ''' is it the weekend ? '''
         return False
     else:
@@ -127,17 +133,18 @@ def my_votes(request):
 @login_required
 def game_vote(request, game_id = None):
     """ logged in user votes for a game here """
-    print "game_vote : user : %s" % request.user.username
+    _log.debug( "game_vote : user : %s" % request.user.username )
     if request.method == 'POST':
         form = GameVoteForm(request.POST)
         if form.is_valid():
-            title = form.cleaned_data['games']
+            title = form.cleaned_data['title']
             #from title we get a Game 
             game = Game.objects.get(title=title)
             # see if this user has voted or added today
             if _can_act(request.user.username) == False:
-                print "%s acted in the last 24 hours" % request.user
-                return _raise_error(reason="You Can Only Vote/Add once a day")
+                _log.debug("%s acted in the last 24 hours" % request.user)
+                response = _raise_error(reason="You Can Only Vote/Add once a day")
+                return response
              
             # remember to get out and vote! 
             # get the count (times this user has voted for this game )
@@ -192,7 +199,7 @@ def game_add(request):
                 user_obj = User.objects.get(username=request.user)
                 # check this user's activity log
                 if _can_act(request.user) == False:
-                    print "%s acted today" % request.user
+                    _log.debug("%s acted today" % request.user)
                     return _raise_error(reason="You Can Only Vote/Add once a day")
                     
                 # if title wasn't matched above, we're safe

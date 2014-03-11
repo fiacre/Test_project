@@ -3,7 +3,7 @@
 {% block content %}
 <form action="/games/vote/" method="post"> {% csrf_token %}
 {{ form.as_p }}
-{% for g in games %}
+{% for g in title %}
 <option value={{ g.title }}> {{ g.title }} </option>
 {% endfor %}
 <input type="submit" value="Vote" />

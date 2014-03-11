@@ -13,7 +13,7 @@ class GameVoteForm(forms.Form):
         dropdown widget
         only show games not owned
     """
-    games = forms.ModelChoiceField(
+    title = forms.ModelChoiceField(
         queryset=Game.objects.filter(owned=False).order_by('title')
         )
 
