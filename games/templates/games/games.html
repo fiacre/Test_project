@@ -4,7 +4,7 @@
 <h1>Games</h1>
 <p> We Own</p>
 <ul>
-{% for game in games %}
+{% for game in owned %}
     <li>{{ game.title }} - {{ game.created|date:"D d M Y" }} </li>
 {% empty %}
     <li>We don't own any games??</li>
@@ -12,8 +12,9 @@
 </ul>
 <p>Voted for</p>
 <ul>
-{% for g,c in added.items %}
-    <li>{{ g }} - {{ c }} Votes </li>
+{% for game in voted %}
+    <li>{{ game.game.title }} - {{ game.game.created|date:"D d M Y"  }} - {{ game.count }}  Votes
+        - <a href="/games/vote/game_id/{{ game.game.id }}/">Vote for {{game.game.title}}</a></li>
 {% endfor %}
 </ul>
 <p>Added</p>

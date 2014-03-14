@@ -1,0 +1,15 @@
+{% extends "games/base.html" %}
+
+{% block content %}
+
+    <p>User Events</p>
+
+    <ul>
+        <li>game | user  | created | count </li>
+        {% for e in activity %}
+            <li>{{ e.game.title }} | {{ e.user.username }} | {{ e.action_datetime }} | {{ e.action }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+

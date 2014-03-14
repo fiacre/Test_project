@@ -9,7 +9,6 @@ from django.shortcuts import render
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from django.db.models import Count
 from django.contrib.auth.models import User
 from games.models import Game, Vote
 from games.models import UserActivityLog
@@ -62,11 +61,12 @@ def _count_votes():
         of games and vote counts
     '''
     context = {}
-    votes = Vote.objects.values('game').annotate(vcount=Count('game'))
+     
+    votes = Vote.objects.all().select_related('game')
     for vote in votes:
-        game = Game.objects.get(pk=vote.get('game'))
+        game = Game.objects.get(pk=vote.game.id)
         if game.owned == False:
-            context[game.title] = vote.get('vcount')
+            context[game.title] = vote.count
     return OrderedDict(reversed(sorted(context.items(), key=lambda t: t[1])))
         
 
@@ -90,13 +90,15 @@ def games(request):
     """
         games we own 
     """
-    added = _count_votes()
-    games = Game.objects.filter(owned=True)
-    no_votes = Game.objects.filter(owned=False).exclude(id__in=Vote.objects.all().values_list('game', flat=True))
+    voted = Vote.objects.filter(count__gt=0).select_related('game')
+    owned = Game.objects.filter(owned=True)
+    no_votes = Game.objects.filter(owned=False).exclude(
+        id__in=Vote.objects.filter(count__gt=0).values_list('game', flat=True)
+        )
 
     return render(request, 'games/games.html', {
-        'games' : games,
-        'added' : added,
+        'owned' : owned,
+        'voted' : voted,
         'no_votes' : no_votes
         })
 
@@ -117,12 +119,12 @@ def vote_index(request):
     d = datetime.now().weekday()
     if d <= 4:
         # if today is Mon ... Fri 
-        votes = Vote.objects.values('game').annotate(vcount=Count('game'))
-        votes = votes.filter(created__gte=datetime.now()-timedelta(days=d))
+        votes = Vote.objects.filter(created__gte=date.today()-timedelta(days=d))
         for vote in votes:
-            game = Game.objects.get(pk=vote.get('game'))
+            game = Game.objects.get(pk=vote.game.id)
             if game.owned == False:
-                context[game.title] = vote.get('vcount')
+                context[game.title] = vote.count
+        context = OrderedDict(reversed(sorted(context.items(), key=lambda t: t[1])))
     return render(request, 'games/votes_list.html', {"context" : context })
 
 
@@ -133,10 +135,10 @@ def top_votes(request):
     context = {}
     today = date.today()
     monday = today - timedelta(days=today.weekday())
-    votes = Vote.objects.filter(created__gte=monday).values('game').annotate(vcount=Count('game'))
+    votes = Vote.objects.filter(created__gte=monday)
     for vote in votes:
-        game = Game.objects.get(pk=vote.get('game'))
-        context[game.title] = vote.get('vcount')
+        game = Game.objects.get(pk=vote.game.id)
+        context[game.title] = vote.count
     ordered = OrderedDict(reversed(sorted(context.items(), key=lambda t: t[1])))
 
     return render(request, "games/vote_count.html", {
@@ -145,20 +147,24 @@ def top_votes(request):
 
 
 class AllVotes(ListView):
-    ''' example of geeric ListView 
-        list al vote and related objects
+    ''' example of generic ListView 
+        list all user actions and related objects
     '''
     model = Vote
-    context_object_name = 'votes'
-    template = 'games/vote_list.html'
-    queryset = Vote.objects.all().select_related('game', 'user').order_by('created')
+    context_object_name = 'activity'
+
+    queryset = UserActivityLog.objects.filter(
+        action='voted').select_related(
+        'game', 'user').order_by('action_datetime')
 
 
 @login_required
 def my_votes(request):
     ''' see what I have added and voted for '''
-    votes = Vote.objects.filter(user=request.user).select_related('game', 'user').order_by('-created')
-    return render(request, 'games/vote_list.html', {"votes" : votes })
+    actions = UserActivityLog.objects.filter(
+        user=request.user, action='voted').select_related(
+            'game', 'user').order_by('-action_datetime')
+    return render(request, 'games/vote_list.html', {"actions" : actions })
 
 # methods below require a logged in user 
 # This definately could be more DRY ... just a first pass
@@ -171,9 +177,6 @@ def game_vote(request, game_id=''):
         if form.is_valid():
             title = form.cleaned_data['title']
             _log.debug("game_vote ; title is : %s " % title)
-            #from title we get a Game 
-            # if this raises an error, let it throw 500
-            game = Game.objects.get(title=title)
             # see if this user has voted or added today
             if _can_act(request.user.username) == False:
                 _log.debug("%s acted today" % request.user)
@@ -181,13 +184,9 @@ def game_vote(request, game_id=''):
                 return response
              
             # remember to get out and vote! 
-            # get the count (times this user has voted for this game )
-            num_votes= Vote.objects.filter(game=game).count()
-            # update Vote with that count+1
-            vote = Vote.objects.create(user=request.user, game=game, count=num_votes+1)
-            vote.save()
+            Vote.increment_count(title)
             # make entry in user activity log
-            UserActivityLog.log_user_action(request.user, "voted", game)
+            UserActivityLog.log_user_action(request.user, "voted", title)
             #say thanks!
             return _say_thanks(request, "your vote for %s has been counted!" % title)
     elif request.method == 'GET' and  game_id:
@@ -198,9 +197,10 @@ def game_vote(request, game_id=''):
             response = _raise_error(reason="You Can't Vote till tomorrow, sorry")
             return response
         else:
-            vote = Vote.objects.create(user=request.user, game=game, count=1)
-            vote.save()
-            UserActivityLog.log_user_action(request.user, "voted", game)
+            # user can vote
+            Vote.increment_count(game.title)
+            # log user action
+            UserActivityLog.log_user_action(request.user, "voted", game.title)
             return _say_thanks(request, "your vote for %s has been counted!" % game.title)
     else:
         # if this is a GET, print form
@@ -235,17 +235,14 @@ def game_add(request):
             # see if this game has been added
             game_obj = Game.objects.filter(title__iexact=title, owned=False)
             if game_obj:
-                #return _raise_error("already owned")
-                # this counts as a vote
+                # test if user has added or voted today
                 if _can_act(request.user.username) == False:
-                    _log.debug("%s acted in the last 24 hours" % request.user)
+                    _log.debug("%s acted in the last day" % request.user)
                     response = _raise_error(reason="You Can Only Vote/Add once a day")
                     return response
-                game = Game.objects.filter(title__iexact=title)[:1].get()
-                num_votes= Vote.objects.filter(user=request.user, game=game_obj).count()
-                vote = Vote.objects.create(user=request.user, game=game, count=num_votes+1)
-                vote.save()
-                UserActivityLog.log_user_action( request.user, "voted", game )
+                # well this is a vote, then
+                Vote.increment_count(title)
+                UserActivityLog.log_user_action( request.user, "voted", title )
                 return _say_thanks(request, "You Voted for %s" % title)
                 
             else:
@@ -264,7 +261,7 @@ def game_add(request):
                 except ValidationError as e:
                     return _raise_error(str(e))
                 obj.save()
-                UserActivityLog.log_user_action( request.user, "added", obj )
+                UserActivityLog.log_user_action( request.user, "added", obj.title )
                 return _say_thanks(request, "%s has been saved" % title)
     else:
         form = GameAddForm()
