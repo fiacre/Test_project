@@ -157,7 +157,7 @@ LOGGING = {
             'level':'DEBUG',
             'class':'logging.handlers.RotatingFileHandler',
             'filename': SITE_ROOT + "/logfile",
-            'maxBytes': 50000,
+            'maxBytes': 5000000,
             'backupCount': 2,
             'formatter': 'standard',
         },
@@ -169,17 +169,17 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers':['console'],
+            'handlers':['logfile'],
             'propagate': True,
             'level':'DEBUG',
         },
         'django.db.backends': {
-            'handlers': ['console'],
+            'handlers': ['logfile'],
             'level': 'ERROR',
             'propagate': False,
         },
-        'game': {
-            'handlers': ['console', 'logfile'],
+        'games': {
+            'handlers': ['logfile'],
             'level': 'DEBUG',
         },
     }

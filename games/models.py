@@ -2,12 +2,10 @@
     Game and Vote Models
 """
 from django.db import models
-from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User as Auth_User
 import datetime 
-import pytz
- 
 from django.conf import settings
 from django.utils.timezone import activate
 activate(settings.TIME_ZONE)
@@ -57,8 +55,7 @@ class Vote(models.Model):
         created: datetime vote was created
         method vote: increment vote count
     '''
-    game = models.ForeignKey(Game)
-    user = models.ForeignKey(Auth_User)
+    game = models.OneToOneField(Game)
     count = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now=True)
 
@@ -67,9 +64,33 @@ class Vote(models.Model):
         db_table = 'votes'
 
     def __unicode__(self):
-        return "%s, %s, %s" % ( self.game, self.user, self.count )
+        return "%s, %s" % ( self.game, self.count )
+
+    @classmethod
+    def increment_count(cls, title):
+        ''' orm classes with classmethods, blech '''
+        # if object does not exist, let the chips fall where they may
+        vote = cls.objects.get(game__title=title)
+        vote.count += 1
+        vote.save()
+        return vote
+
+    
+def create_new_vote(sender, instance, created, **kwargs):  
+    ''' listen for signal to create vote ''' 
+    if created:  
+        vote, created = Vote.objects.get_or_create(game=instance)  
+ 
+''' nab signal '''
+post_save.connect(create_new_vote, sender=Game) 
+
 
 class UserActivityLog(models.Model):
+    '''
+        User activities
+        of add or vote
+        are stored
+    '''
     user = models.ForeignKey(Auth_User)
     action_datetime = models.DateTimeField(auto_now=True)
     action = models.CharField(max_length=16)
@@ -92,13 +113,13 @@ class UserActivityLog(models.Model):
             return ual.action_datetime
     
     @classmethod
-    def log_user_action(cls, username, action, game):
+    def log_user_action(cls, username, action, game_title):
         '''
             cls is UserActivityLog
             kwargs = 
                 action
                 username
-                game
+                game title
             if action is added or voted, 
             store user, action and game with
             datetime stamp
@@ -108,7 +129,7 @@ class UserActivityLog(models.Model):
         except ObjectDoesNotExist:
             raise("failed to create user from name %s" % username)
 
-        ual = cls.objects.create(user=user_obj, action=action, game=game)
+        ual = cls.objects.create(user=user_obj, action=action, game=Game.objects.get(title=game_title))
         try:
             ual.full_clean()
         except ValidationError as e:
