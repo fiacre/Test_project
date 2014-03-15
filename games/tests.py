@@ -159,3 +159,23 @@ class GamesTests(TestCase):
         response = game_vote(request, game_id=1)
         self.assertEqual(response.status_code, 200) 
 
+    def test_count_votes(self):
+        ''' have joe, rich, john and mary
+            vote on a game
+        '''
+        joe = User.objects.get(username="joe") 
+        rich = User.objects.get(username="rich") 
+        john = User.objects.get(username="john") 
+        mary = User.objects.get(username="mary") 
+
+        game = Game(id=20000, title="Test Count Votes", owned=False, user=joe)
+        game.save()
+        for user in ( rich, john, mary ):
+            request = self.factory.post( '/games/vote/',
+                { 'title' : 20000 })
+            request.user = user
+            response = game_vote(request, game_id=20000)
+            self.assertEqual(response.status_code, 200) 
+        v = Vote.objects.filter(game=game)[:1].get()
+        self.assertEqual(v.count, 3)
+

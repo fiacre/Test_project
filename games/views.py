@@ -116,15 +116,15 @@ def vote_index(request):
         refactor
     """
     context = {}
-    d = datetime.now().weekday()
-    if d <= 4:
-        # if today is Mon ... Fri 
-        votes = Vote.objects.filter(created__gte=date.today()-timedelta(days=d))
-        for vote in votes:
-            game = Game.objects.get(pk=vote.game.id)
-            if game.owned == False:
-                context[game.title] = vote.count
-        context = OrderedDict(reversed(sorted(context.items(), key=lambda t: t[1])))
+    d = date.today().weekday()
+    # only want gmes voted on since this Monday
+    votes = Vote.objects.filter(
+        created__gte=date.today()-timedelta(days=d)).select_related('game')
+    for vote in votes:
+        #game = Game.objects.get(pk=vote.game.id)
+        if vote.game.owned == False:
+            context[vote.game.title] = vote.count
+    context = OrderedDict(reversed(sorted(context.items(), key=lambda t: t[1])))
     return render(request, 'games/votes_list.html', {"context" : context })
 
 
