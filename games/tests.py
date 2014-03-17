@@ -1,9 +1,9 @@
-from django.test import TestCase
+#from django.test import TestCase
 import unittest
 from django.test import Client
 from django.test.client import RequestFactory
 from django.contrib.auth.models import User
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import pytz
 
 from django.conf import settings
@@ -18,7 +18,18 @@ from games.views import vote_index, top_votes, \
 
 from games.forms import GameAddForm, GameVoteForm, VoteCountForm
 
-class GamesTests(TestCase):
+class MockDateTime(datetime):
+    @classmethod
+    def monday_noon(cls):
+        d = date.today().weekday()
+        monday_date = date.today()-timedelta(days=d)
+        return cls(monday_date.year, 
+            monday_date.month, 
+            monday_date.day, 
+            12, 
+            tzinfo= pytz.timezone("US/Central"))
+
+class GamesTests(unittest.TestCase):
     fixtures = ['initial_data.json']
     ''' boilerplate test case '''
     def setUp(self):
@@ -42,7 +53,7 @@ class GamesTests(TestCase):
 
     def test_game_model_2(self):
         ''' does model take created argument '''
-        created_date = datetime.now(pytz.UTC) - timedelta(days=3)
+        created_date = datetime.now(pytz.timezone(settings.TIME_ZONE)) - timedelta(days=3)
         game = Game(title='Another Game Title', user=self.user, created=created_date)
         self.assertIsInstance(game, Game)
 
@@ -76,7 +87,9 @@ class GamesTests(TestCase):
         last_acted = UserActivityLog.last_acted(user)
 
         self.assertIsInstance(last_acted, datetime)
-        self.assertTrue(last_acted - datetime.now(pytz.UTC) < timedelta(seconds=1) )
+        #self.assertTrue(last_acted - datetime.now(pytz.UTC) < timedelta(seconds=1) )
+        # don't care what UTC time is
+        self.assertTrue(last_acted - datetime.now(pytz.timezone(settings.TIME_ZONE)) < timedelta(seconds=1) )
         
 
     def test_game_add_form(self):
@@ -104,7 +117,6 @@ class GamesTests(TestCase):
         game_1 = Game.objects.get(title="AMF Bowling 2004")
         game_2 = Game.objects.get(title="Arctic Thunder")
         user=User.objects.get(username="tom")
-        created_one = datetime.now(pytz.UTC)
         request = self.factory.post( '/games/vote/',
             { 'title' : game_1.id })
         request.user = user 
@@ -178,4 +190,22 @@ class GamesTests(TestCase):
             self.assertEqual(response.status_code, 200) 
         v = Vote.objects.filter(game=game)[:1].get()
         self.assertEqual(v.count, 3)
+
+    @unittest.skip("not working yet")
+    def test_vote_on_weekend(self):
+        '''
+            mock the datetime and vote
+        '''
+        monday_noon = MockDateTime.monday_noon()
+        # add 5 days:
+        vote_date = monday_noon + timedelta(days=5)
+        # now vote
+        tob = User.objects.get(username="tob") 
+        game = Game.objects.get(title="AMF Bowling 2004")
+        request = self.factory.post( '/games/vote/',
+            { 'title' : game.id })
+        request.user = tob 
+        response = game_vote(request)
+        self.assertNotEqual(response.status_code, 200)
+
 

@@ -48,7 +48,7 @@ def _can_act(user):
         return True
     if ual.day == datetime.now().day:
         return False
-    elif datetime.now().isoweekday() > 5:
+    elif date.today.weekday() >= 5:
         ''' is it the weekend ? '''
         return False
     else:

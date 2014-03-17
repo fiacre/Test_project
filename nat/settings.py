@@ -1,5 +1,6 @@
 # Django settings for nat project.
 import os
+import sys
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -21,6 +22,9 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default.
     }
 }
+if 'test' in sys.argv:
+    DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
+
 SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
