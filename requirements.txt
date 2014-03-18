@@ -4,4 +4,5 @@ django-shell-plus==1.1.5
 mock==1.0.1
 pytz
 pysqlite
+flup
 
