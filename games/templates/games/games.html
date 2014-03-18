@@ -14,13 +14,20 @@
 <ul>
 {% for game in voted %}
     <li>{{ game.game.title }} - {{ game.game.created|date:"D d M Y"  }} - {{ game.count }}  Votes
-        - <a href="/games/vote/game_id/{{ game.game.id }}/">Vote for {{game.game.title}}</a></li>
+        {% if user.is_authenticated %}
+        - <a href="/games/vote/game_id/{{ game.game.id }}/">Vote for {{game.game.title}}</a>
+        {% endif %}
+     </li>
 {% endfor %}
 </ul>
 <p>Added</p>
 <ul>
 {% for game in no_votes %}
-    <li>{{ game.title }} - {{ game.created|date:"D d M Y" }} <a href="/games/vote/game_id/{{ game.id }}/">Vote for {{game.title}}</a></li>
+    <li>{{ game.title }} - {{ game.created|date:"D d M Y" }} 
+    {% if user.is_authenticated %}
+        <a href="/games/vote/game_id/{{ game.id }}/">Vote for {{game.title}}</a>
+    {% endif %}
+    </li>
 {% empty %}
     <li></li>
 {% endfor %}

@@ -122,7 +122,7 @@ WSGI_APPLICATION = 'nat.wsgi.application'
 TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    "/home/alee/nerdery/nat/nat/templates",
+    "/home/alee/Test_project/nat/templates",
 )
 
 INSTALLED_APPS = (
