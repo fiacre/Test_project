@@ -48,8 +48,8 @@ def _can_act(user):
         return True
     if ual.day == datetime.now().day:
         return False
-    elif date.today.weekday() >= 5:
-        ''' is it the weekend ? '''
+    elif date.today().weekday() >= 5:
+        ''' is it the weekend  '''
         return False
     else:
         return True
@@ -224,23 +224,28 @@ def game_add(request):
         form = GameAddForm(request.POST)
         if form.is_valid():
             title = form.cleaned_data['title']
+            # clean title
+            tite= title.strip()
+            if title == '':
+                return _raise_error("No title")
             # see if this game is already owned 
             # would like this to be fuzzy
             # case-insensitive for now
-            game_obj = Game.objects.filter(title__iexact=title, owned=True)
-            if game_obj:
+            qs = Game.objects.filter(title__icontains=title, owned=True)
+            if qs:
                 _log.error("%s is already owned" % title)
                 return _raise_error("%s is already owned" % title)
             
-            # see if this game has been added
-            game_obj = Game.objects.filter(title__iexact=title, owned=False)
-            if game_obj:
+            # see if this game has been added 
+            qs = Game.objects.filter(title__icontains=title, owned=False)
+            if qs:
                 # test if user has added or voted today
                 if _can_act(request.user.username) == False:
                     _log.debug("%s acted in the last day" % request.user)
                     response = _raise_error(reason="You Can Only Vote/Add once a day")
                     return response
-                # well this is a vote, then
+                # insert since this title exists
+                # this is a vote
                 Vote.increment_count(title)
                 UserActivityLog.log_user_action( request.user, "voted", title )
                 return _say_thanks(request, "You Voted for %s" % title)
@@ -253,9 +258,10 @@ def game_add(request):
                     _log.debug("%s acted today" % request.user)
                     return _raise_error(reason="You Can Only Vote/Add once a day")
                     
-                # if title wasn't matched above, we're safe
-                # to create without throwing a db error
-                obj = Game.objects.create(title=title, user=user_obj)
+                try:
+                    obj = Game.objects.create(title=title, user=user_obj)
+                except IntegrityError:
+                    _raise_error("%s exists" % title)
                 try:
                     obj.full_clean()
                 except ValidationError as e:

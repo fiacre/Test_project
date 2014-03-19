@@ -191,6 +191,25 @@ class GamesTests(unittest.TestCase):
         v = Vote.objects.filter(game=game)[:1].get()
         self.assertEqual(v.count, 3)
 
+    def add_existing_title(self):
+        user1= User.objects.create_user('uuu', 'uuu@foo.com', 'foooo')
+        user2 = User.objects.create_user('vvv', 'vvv@foo.com', 'boooo') 
+        title = "  awesome magic game of foo   "
+        
+        request = self.factory.post('/games/add/', 
+            { 'title' : title, })
+        request.user = user1
+        response = game_add(request)
+        
+        self.assertEqual(response.status_code, 200)
+
+        request = self.factory.post('/games/add/', 
+            { 'title' : title, })
+        request.user = user2
+        response = game_add(request)
+        
+        self.assertNotEqual(response.status_code, 200)
+
     @unittest.skip("not working yet")
     def test_vote_on_weekend(self):
         '''
@@ -208,4 +227,5 @@ class GamesTests(unittest.TestCase):
         response = game_vote(request)
         self.assertNotEqual(response.status_code, 200)
 
+    
 
