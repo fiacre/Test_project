@@ -180,15 +180,16 @@ class GamesTests(unittest.TestCase):
         john = User.objects.get(username="john") 
         mary = User.objects.get(username="mary") 
 
-        game = Game(id=20000, title="Test Count Votes", owned=False, user=joe)
+        game = Game(id=45698, title="xyz Test Count Votes", owned=False, user=joe)
         game.save()
         for user in ( rich, john, mary ):
             request = self.factory.post( '/games/vote/',
-                { 'title' : 20000 })
+                { 'title' : 45698 })
             request.user = user
-            response = game_vote(request, game_id=20000)
+            response = game_vote(request, game_id=45698)
             self.assertEqual(response.status_code, 200) 
         v = Vote.objects.filter(game=game)[:1].get()
+        print v
         self.assertEqual(v.count, 3)
 
     def add_existing_title(self):
