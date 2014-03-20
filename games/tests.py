@@ -135,22 +135,22 @@ class GamesTests(TestCase):
     def test_add_added_title(self):
         user=User.objects.get(username="betty")
         request = self.factory.post( '/games/add/',
-            { 'title' : 'a good test title' } )
+            { 'title' : 'test title xyz' } )
         request.user = user
         response=game_add(request)
         self.assertEqual(response.status_code, 200)
 
         user=User.objects.get(username="sam")
         request = self.factory.post( '/games/add/',
-            { 'title' : 'a good test title' } )
+            { 'title' : 'test title xyz' } )
         request.user = user
         response=game_add(request)
 
         self.assertEqual(response.status_code, 200)
+        vote = Vote.objects.filter(game=Game.objects.get(title='test title xyz'))[:1].get()
+        self.assertIsInstance(vote, Vote)
+        self.assertEqual(vote.count, 1)
 
-        vote = Vote.objects.get(game__title="a good test title")
-        self.assertTrue(vote.count > 0 )
-        
     def test_add_and_vote(self):
         user=User.objects.get(username="bob")
         request = self.factory.post( '/games/add/',

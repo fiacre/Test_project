@@ -31,6 +31,7 @@ class Game(models.Model):
     title = models.CharField(max_length=255, unique=True)
     owned = models.BooleanField(default=False)
     user = models.ForeignKey(Auth_User)
+    image = models.ImageField(upload_to='nat/media', height_field=450, width_field=600, null=True, blank=True)
     created = models.DateTimeField(default=datetime.now(tz=TIMEZONE), blank=False)
 
     def __unicode__(self):
@@ -147,4 +148,23 @@ class UserActivityLog(models.Model):
         ual = cls.objects.create(user=user_obj, created=now, action=action, game=Game.objects.get(title=game_title))
         _log.debug("log user action : %s" %  ual )
         ual.save()
+
+
+
+class Rating(models.Model):
+    RATING_STARS = (
+        ('1', 'one star'),
+        ('2', 'two stars'),
+        ('3', 'three stars'),
+        ('4', 'four stars'),
+        ('5', 'five stars'),
+    )
+    game = models.ForeignKey(Game)
+    rating = models.CharField(max_length=1, choices=RATING_STARS)
+
+    class Meta:
+        db_table = 'rating'
+    
+    def __unicode__(self):
+        return "%s, %s" % (self.game, self.rating )
 

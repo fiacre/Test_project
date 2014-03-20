@@ -228,15 +228,5 @@
         "owned": false, 
         "title": "Super Fun Ball"
     }
-},
-{
-    "pk": 200, 
-    "model": "games.game", 
-    "fields": {
-        "created": "2014-03-14T17:16:05Z", 
-        "user": 9, 
-        "owned": false, 
-        "title": "Test Count Votes"
-    }
 }
 ]
