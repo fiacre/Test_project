@@ -120,6 +120,7 @@ class UserActivityLog(models.Model):
             return None
         else:
             _log.debug("last_acted: %s" % ual)
+            _log.debug("last_acted in this timezone: %s" % ual.created.astimezone(tz=TIMEZONE))
             # that is utc time
             # we need localtime
             return ual.created.astimezone(tz=TIMEZONE)
