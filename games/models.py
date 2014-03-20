@@ -1,6 +1,7 @@
 """
     Game and Vote Models
 """
+import logging
 from django.db import models
 from django.db.models.signals import post_save
 from django.core.exceptions import ObjectDoesNotExist
@@ -12,6 +13,7 @@ from django.utils.timezone import activate
 activate(settings.TIME_ZONE)
 TIMEZONE = pytz.timezone(settings.TIME_ZONE)
  
+_log = logging.getLogger(__name__)
 
 class Game(models.Model):
     '''
@@ -60,7 +62,7 @@ class Vote(models.Model):
     '''
     game = models.OneToOneField(Game)
     count = models.IntegerField(default=0)
-    created = models.DateTimeField(default=datetime.now(tz=TIMEZONE), blank=False)
+    created = models.DateTimeField(default=datetime.now, blank=False)
 
     class Meta:
         """ prefer simple table name in db """
@@ -82,7 +84,7 @@ class Vote(models.Model):
 def create_new_vote(sender, instance, created, **kwargs):  
     ''' listen for signal to create vote ''' 
     if created:  
-        vote, created = Vote.objects.get_or_create(game=instance, created=datetime.now(tz=TIMEZONE))  
+        vote, created = Vote.objects.get_or_create(game=instance)  
  
 ''' nab signal '''
 post_save.connect(create_new_vote, sender=Game) 
@@ -95,7 +97,7 @@ class UserActivityLog(models.Model):
         are stored
     '''
     user = models.ForeignKey(Auth_User)
-    action_datetime = models.DateTimeField(default=datetime.now(tz=TIMEZONE), blank=False)
+    created = models.DateTimeField(blank=False)
     action = models.CharField(max_length=16)
     game = models.ForeignKey(Game)
 
@@ -103,43 +105,45 @@ class UserActivityLog(models.Model):
         db_table = 'user_activity'
 
     def __unicode__(self):
-        return "%s, %s, %s" % ( self.user, self.action, self.action_datetime ) 
+        return "%s, %s, %s" % ( self.user, self.action, self.created ) 
+
     @classmethod
     def last_acted(cls, username):
+        ''' when did this user last vote or add '''
         try:
             user_obj = Auth_User.objects.get(username=username)
         except ObjectDoesNotExist:
             raise("failed to create user from name %s" % username)
         try:
-            ual = cls.objects.filter(user=user_obj).order_by('-action_datetime')[:1].get()
+            ual = cls.objects.filter(user=user_obj).order_by('created')[:1].get()
         except ObjectDoesNotExist:
             return None
         else:
-            return ual.action_datetime
+            _log.debug("last_acted: %s" % ual)
+            # that is utc time
+            # we need localtime
+            return ual.created.astimezone(tz=TIMEZONE)
     
     @classmethod
     def log_user_action(cls, username, action, game_title):
         '''
             cls is UserActivityLog
-            kwargs = 
                 action
                 username
                 game title
             if action is added or voted, 
             store user, action and game with
-            datetime stamp
+            datetime stamp set in current tz
         '''
-        datetime.now(tz=TIMEZONE)
+        now = datetime.now(tz=TIMEZONE)
+        _log.debug("what time is it? : %s " % now)
+        _log.debug("in what time zone? : %s " % TIMEZONE)
         try:
             user_obj = Auth_User.objects.get(username=username)
         except ObjectDoesNotExist:
             raise("failed to create user from name %s" % username)
 
-        ual = cls.objects.create(user=user_obj, action=action, game=Game.objects.get(title=game_title))
-        try:
-            ual.full_clean()
-        except ValidationError as e:
-            raise e
-        print ual
+        ual = cls.objects.create(user=user_obj, created=now, action=action, game=Game.objects.get(title=game_title))
+        _log.debug("log user action : %s" %  ual )
         ual.save()
 
