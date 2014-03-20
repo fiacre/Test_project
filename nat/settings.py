@@ -13,15 +13,13 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'nat',                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': 'alee',
         'PASSWORD': 'nat',
         'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',                      # Set to empty string for default.
-        'OPTIONS' : { 'init_command': 'SET storage_engine=INNODB;' }
-
     }
 }
 if 'test' in sys.argv:
