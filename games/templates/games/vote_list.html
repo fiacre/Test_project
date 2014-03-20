@@ -7,7 +7,7 @@
     <ul>
         <li>game | user  | created | count </li>
         {% for event in actions %}
-            <li>{{ event.game }} | {{ event.user }} | {{ event.action_datetime }} | {{ event.count }}</li>
+            <li>{{ event.game }} | {{ event.user }} | {{ event.created }} | {{ event.count }}</li>
         {% endfor %}
     </ul>
 {% endblock %}

@@ -120,7 +120,7 @@ def vote_index(request):
     d = date.today().weekday()
     # only want gmes voted on since this Monday
     votes = Vote.objects.filter(
-        created__gte=date.today()-timedelta(days=d)).select_related('game')
+        created__gte=date.today()-timedelta(days=d), count__gt=0).select_related('game')
     for vote in votes:
         #game = Game.objects.get(pk=vote.game.id)
         if vote.game.owned == False:
@@ -156,7 +156,7 @@ class AllVotes(ListView):
 
     queryset = UserActivityLog.objects.filter(
         action='voted').select_related(
-        'game', 'user').order_by('action_datetime')
+        'game', 'user').order_by('created')
 
 
 @login_required
@@ -164,7 +164,7 @@ def my_votes(request):
     ''' see what I have added and voted for '''
     actions = UserActivityLog.objects.filter(
         user=request.user, action='voted').select_related(
-            'game', 'user').order_by('-action_datetime')
+            'game', 'user').order_by('-created')
     return render(request, 'games/vote_list.html', {"actions" : actions })
 
 # methods below require a logged in user 

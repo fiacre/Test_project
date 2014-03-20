@@ -81,7 +81,7 @@ class GamesTests(TestCase):
         game = Game(title='Game in UAL', user=user)
         game.save()
         action = 'added',
-        ual = UserActivityLog(game=game, user=user, action=action)
+        ual = UserActivityLog(game=game, created=datetime.now(pytz.timezone(settings.TIME_ZONE)), user=user, action=action)
         ual.save()
         self.assertIsInstance(ual, UserActivityLog)
 
@@ -89,8 +89,6 @@ class GamesTests(TestCase):
         last_acted = UserActivityLog.last_acted(user)
 
         self.assertIsInstance(last_acted, datetime)
-        #self.assertTrue(last_acted - datetime.now(pytz.UTC) < timedelta(seconds=1) )
-        # don't care what UTC time is
         self.assertTrue(last_acted - datetime.now(pytz.timezone(settings.TIME_ZONE)) < timedelta(seconds=1) )
         
 
@@ -118,6 +116,7 @@ class GamesTests(TestCase):
         '''
         game_1 = Game.objects.get(title="AMF Bowling 2004")
         game_2 = Game.objects.get(title="Arctic Thunder")
+
         user=User.objects.get(username="tom")
         request = self.factory.post( '/games/vote/',
             { 'title' : game_1.id })
