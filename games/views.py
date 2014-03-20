@@ -40,15 +40,16 @@ def _can_act(user):
     ''' has this user acted today
         check the activity log
     '''
+    tz = pytz.timezone(settings.TIME_ZONE)
     ual = UserActivityLog.last_acted(user)
 
     _log.debug("user %s activity log : %s " % (user, ual))
 
     if ual is None :
         return True
-    if ual.day == datetime.now().day:
+    if ual.day == datetime.now(tz=tz).day:
         return False
-    elif date.today().weekday() >= 5:
+    elif datetime.now(tz=tz).weekday() >= 5:
         ''' is it the weekend  '''
         return False
     else:

@@ -1,4 +1,6 @@
 #from django.test import TestCase
+from django.test import TestCase
+
 import unittest
 from django.test import Client
 from django.test.client import RequestFactory
@@ -29,8 +31,8 @@ class MockDateTime(datetime):
             12, 
             tzinfo= pytz.timezone("US/Central"))
 
-class GamesTests(unittest.TestCase):
-    fixtures = ['initial_data.json']
+class GamesTests(TestCase):
+    fixtures = ['games/fixtures/users.json', 'games/fixtures/games.json']
     ''' boilerplate test case '''
     def setUp(self):
         self.factory = RequestFactory()

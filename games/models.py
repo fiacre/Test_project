@@ -5,11 +5,14 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User as Auth_User
-import datetime 
+from datetime import datetime
+import pytz
 from django.conf import settings
 from django.utils.timezone import activate
 activate(settings.TIME_ZONE)
+TIMEZONE = pytz.timezone(settings.TIME_ZONE)
  
+
 class Game(models.Model):
     '''
         Game class
@@ -26,7 +29,7 @@ class Game(models.Model):
     title = models.CharField(max_length=255, unique=True)
     owned = models.BooleanField(default=False)
     user = models.ForeignKey(Auth_User)
-    created = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(default=datetime.now(tz=TIMEZONE), blank=False)
 
     def __unicode__(self):
         return self.title
@@ -57,7 +60,7 @@ class Vote(models.Model):
     '''
     game = models.OneToOneField(Game)
     count = models.IntegerField(default=0)
-    created = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(default=datetime.now(tz=TIMEZONE), blank=False)
 
     class Meta:
         """ prefer simple table name in db """
@@ -79,7 +82,7 @@ class Vote(models.Model):
 def create_new_vote(sender, instance, created, **kwargs):  
     ''' listen for signal to create vote ''' 
     if created:  
-        vote, created = Vote.objects.get_or_create(game=instance)  
+        vote, created = Vote.objects.get_or_create(game=instance, created=datetime.now(tz=TIMEZONE))  
  
 ''' nab signal '''
 post_save.connect(create_new_vote, sender=Game) 
@@ -92,13 +95,15 @@ class UserActivityLog(models.Model):
         are stored
     '''
     user = models.ForeignKey(Auth_User)
-    action_datetime = models.DateTimeField(auto_now=True)
+    action_datetime = models.DateTimeField(default=datetime.now(tz=TIMEZONE), blank=False)
     action = models.CharField(max_length=16)
     game = models.ForeignKey(Game)
 
     class Meta:
         db_table = 'user_activity'
 
+    def __unicode__(self):
+        return "%s, %s, %s" % ( self.user, self.action, self.action_datetime ) 
     @classmethod
     def last_acted(cls, username):
         try:
@@ -124,6 +129,7 @@ class UserActivityLog(models.Model):
             store user, action and game with
             datetime stamp
         '''
+        datetime.now(tz=TIMEZONE)
         try:
             user_obj = Auth_User.objects.get(username=username)
         except ObjectDoesNotExist:
