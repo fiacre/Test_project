@@ -4,10 +4,13 @@ in a virtualenv run pip install -r requirements.txt
 
  THEN 
 python manage.py syncdb
-python manage.py createsuperuser
+python manage.py createsuperuser *if not already created*
+
+Load some test data:
+python manage.py loaddata data/initial_data.json
 
 
-tests:
+run tests:
 python manage.py test games 
 
 
