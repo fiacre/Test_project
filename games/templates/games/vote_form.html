@@ -1,4 +1,6 @@
-<h1></h1>
+{% extends "games/base.html" %}
+
+{% block content %}
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
@@ -10,3 +12,5 @@
 {% endfor %}
 <input type="submit" value="Vote" />
 </form>
+{% endblock %}
+

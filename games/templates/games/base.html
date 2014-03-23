@@ -3,30 +3,15 @@
 <head>
     <meta charset="utf-8">
     <title>Sample Project for Nerdery</title>
-    <style type="text/css" media="screen">
-        html, body, div {margin:0;padding:0;}
-        body {font-family: Verdana; font-size:10pt;}
-        span#who {float:right;}
-        div#ribbon {padding: 5px;background-color: #444;color:#DDD;}
-        div#ribbon a {color:#DDD;}
-        div#content {padding: 5px 20px;}
-        div#login {margin: 100px auto;width: 300px;border: 1px solid #444;}
-        div#login h3 {background-color: #444;color:#EEE;padding:5px;font-weight:normal;margin:0;}
-        div#login div#form div, div#login div#form  p {padding: 7px;text-align:center;}
-        div#form label {width:100px;display:block;float:left;text-align:right;}
-        th {background-color:#CCC;}
-        table {border-collapse: collapse;margin-top:20px;}
-        td, th {padding: 5px;border:1px solid #444;}
-        div.doc-image {float: left;margin-right:25px;margin-bottom:15px;}
-    </style>
+    <link href="{{ STATIC_URL }}css/main.css" rel="stylesheet" type="text/css" media="screen" />
 </head>
 <body>
     <div id="ribbon">
         <span id="who">{% if user.is_anonymous %}Not Logged In{% else %}{{ user }}{% endif %}</span>
-
         {% if user.is_anonymous %}
         <a href="/games/games/">Game List</a> | <a href="/login/">Login</a>
         {% else %}
+        <a href="/games/main/">Main</a> |
         <a href="/games/games/">Game List</a> |
         <a href="/games/vote_index/">Votes This Week</a> | 
         <a href="/games/all_votes/">History</a> |
@@ -36,11 +21,5 @@
     </div>
     <div id="content">
         {% block content %}{% endblock %}
-    </div>
-    {% if user.is_authenticated %}
-    <div id="content">
-        <a href="/games/main/">Main</a>
-    </div>
-    {% endif %}
 </body>
 </html>
