@@ -111,7 +111,7 @@ class GamesTests(TestCase):
 
 
     def test_vote_twice_in_day(self):
-        ''' POST two games within 30 minutes
+        ''' POST two votes one after the other 
             second POST should barf
         '''
         game_1 = Game.objects.get(title="AMF Bowling 2004")
