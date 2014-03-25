@@ -84,6 +84,7 @@ def vote_index(request):
     ''' only want games voted on since this Monday '''
     votes = Vote.objects.filter(
         created__gte=date.today()-timedelta(days=d), count__gt=0).select_related('game')
+    _log.debug(votes)
     for vote in votes:
         #game = Game.objects.get(pk=vote.game.id)
         if vote.game.owned == False:
@@ -101,6 +102,7 @@ def top_votes(request):
     ''' figure out when the most recent Monday was '''
     monday = today - timedelta(days=today.weekday())
     votes = Vote.objects.filter(created__gte=monday)
+    _log.debug(votes)
     for vote in votes:
         game = Game.objects.get(pk=vote.game.id)
         context[game.title] = vote.count

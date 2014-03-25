@@ -78,6 +78,7 @@ class Vote(models.Model):
         ''' orm classes with classmethods, blech '''
         # if object does not exist, let the chips fall where they may
         vote = cls.objects.get(game__title=title)
+        vote.created = datetime.now()
         vote.count += 1
         vote.save()
         return vote
