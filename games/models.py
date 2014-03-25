@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User as Auth_User
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from django.conf import settings
 from django.utils.timezone import activate
@@ -20,7 +20,7 @@ class Game(models.Model):
         Game class
         title: xbox game name
         owned: is title owned by nerdery
-        gamer ; user the added game
+        user: user the added game
         created: datetime of object
 
         class method
@@ -28,11 +28,11 @@ class Game(models.Model):
                 return True if title is in db
     '''     
        
-    title = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=255, unique=True, blank=False)
     owned = models.BooleanField(default=False)
     user = models.ForeignKey(Auth_User)
     image = models.ImageField(upload_to='nat/media', height_field=450, width_field=600, null=True, blank=True)
-    created = models.DateTimeField(default=datetime.now(tz=TIMEZONE), blank=False)
+    created = models.DateTimeField(default=datetime.now, blank=False)
 
     def __unicode__(self):
         return self.title
@@ -51,6 +51,7 @@ class Game(models.Model):
             return True
         else:
             return False
+
 
 class Vote(models.Model):
     '''
@@ -116,7 +117,11 @@ class UserActivityLog(models.Model):
         except ObjectDoesNotExist:
             raise("failed to create user from name %s" % username)
         try:
-            ual = cls.objects.filter(user=user_obj).order_by('created')[:1].get()
+            ''' only need activity in
+                the last few days
+            '''
+            d = datetime.now() - timedelta(days=2)
+            ual = cls.objects.filter(user=user_obj, created__gt=d).order_by('-created')[:1].get()
         except ObjectDoesNotExist:
             return None
         else:

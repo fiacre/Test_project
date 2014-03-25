@@ -27,6 +27,7 @@
         {% if user.is_anonymous %}
         <a href="/games/games/">Game List</a> | <a href="/login/">Login</a>
         {% else %}
+        <a href="/games/main/">Main</a> | 
         <a href="/games/games/">Game List</a> |
         <a href="/games/vote_index/">Votes This Week</a> | 
         <a href="/games/all_votes/">History</a> |
@@ -37,10 +38,6 @@
     <div id="content">
         {% block content %}{% endblock %}
     </div>
-    {% if user.is_authenticated %}
-    <div id="content">
-        <a href="/games/main/">Main</a>
-    </div>
-    {% endif %}
+
 </body>
 </html>

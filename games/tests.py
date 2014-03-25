@@ -212,6 +212,17 @@ class GamesTests(TestCase):
         
         self.assertNotEqual(response.status_code, 200)
 
+    def add_blank_title(self):
+        user = User.objects.create_user('www', 'uuu@foo.com', 'foooo')
+        title = "   "
+        request = self.factory.post('/games/add/', 
+            { 'title' : title, })
+        request.user = user
+        response = game_add(request)
+        
+        self.assertNotEqual(response.status_code, 200)
+        
+
     @unittest.skip("not working yet")
     def test_vote_on_weekend(self):
         '''

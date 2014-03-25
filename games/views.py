@@ -16,6 +16,7 @@ from django.views.generic import DetailView, ListView
 from games.forms import GameAddForm 
 from games.forms import GameVoteForm 
 from games.forms import VoteCountForm 
+from games.helpers import _can_act, _count_votes
 
 
 from django.conf import settings
@@ -36,42 +37,6 @@ def _say_thanks(request, msg):
     return render(request, "games/thanks.html", {
         "msg" : msg })
 
-def _can_act(user):
-    ''' has this user acted today
-        check the activity log
-    '''
-    tz = pytz.timezone(settings.TIME_ZONE)
-    ual = UserActivityLog.last_acted(user)
-
-    _log.debug("user %s activity log : %s " % (user, ual))
-
-    if ual is None :
-        return True
-    if ual.day == datetime.now(tz=tz).day:
-        return False
-    elif datetime.now(tz=tz).weekday() >= 5:
-        ''' is it the weekend  '''
-        return False
-    else:
-        return True
-
-def _count_votes():
-    ''' aggregate votes
-        based on a filter (if exists)
-        return ordered dict
-        of games and vote counts
-    '''
-    context = {}
-     
-    votes = Vote.objects.all().select_related('game')
-    for vote in votes:
-        game = Game.objects.get(pk=vote.game.id)
-        if game.owned == False:
-            context[game.title] = vote.count
-    return OrderedDict(reversed(sorted(context.items(), key=lambda t: t[1])))
-        
-
-    
 # views 
 def login(request):
     ''' login view for adding or voting
@@ -111,14 +76,12 @@ def main(request):
     return render(request, 'games/main.html')
     
 def vote_index(request):
-    """ votes view 
+    ''' votes view 
         show table of games and votes
-        sloppy date handling
-        refactor
-    """
+    '''
     context = {}
     d = date.today().weekday()
-    # only want gmes voted on since this Monday
+    ''' only want games voted on since this Monday '''
     votes = Vote.objects.filter(
         created__gte=date.today()-timedelta(days=d), count__gt=0).select_related('game')
     for vote in votes:
@@ -135,11 +98,13 @@ def top_votes(request):
     """
     context = {}
     today = date.today()
+    ''' figure out when the most recent Monday was '''
     monday = today - timedelta(days=today.weekday())
     votes = Vote.objects.filter(created__gte=monday)
     for vote in votes:
         game = Game.objects.get(pk=vote.game.id)
         context[game.title] = vote.count
+    ''' keep order by num votes '''
     ordered = OrderedDict(reversed(sorted(context.items(), key=lambda t: t[1])))
 
     return render(request, "games/vote_count.html", {
@@ -276,3 +241,4 @@ def game_add(request):
         'form': form,
     })
     
+
