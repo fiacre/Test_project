@@ -140,6 +140,7 @@ def my_votes(request):
 def game_vote(request, game_id=''):
     """ logged in user votes for a game here """
     _log.debug( "game_vote : user : %s" % request.user.username )
+
     if request.method == 'POST':
         form = GameVoteForm(request.POST)
         if form.is_valid():
@@ -157,6 +158,7 @@ def game_vote(request, game_id=''):
             UserActivityLog.log_user_action(request.user, "voted", title)
             #say thanks!
             return _say_thanks(request, "your vote for %s has been counted!" % title)
+
     elif request.method == 'GET' and  game_id:
         # if object does not exist, punt to 500 handler
         game = Game.objects.get(pk=game_id)
@@ -180,14 +182,16 @@ def game_vote(request, game_id=''):
 
 @login_required
 def game_add(request):
-    """ 
+    ''' 
         logged in user adds a game here 
         can't add a game if it is owned
         can't add a game if user
             has voted or added  today
         if user x adds, then user y adds
             count as a vote
-    """
+        
+        TODO: is owned, is_added in model?
+    '''
     if request.method == 'POST':
         form = GameAddForm(request.POST)
         if form.is_valid():
@@ -197,8 +201,6 @@ def game_add(request):
             if title == '':
                 return _raise_error("No title")
             # see if this game is already owned 
-            # would like this to be fuzzy
-            # case-insensitive for now
             qs = Game.objects.filter(title__icontains=title, owned=True)
             if qs:
                 _log.error("%s is already owned" % title)

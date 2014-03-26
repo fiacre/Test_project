@@ -24,7 +24,7 @@ class Game(models.Model):
         created: datetime of object
 
         class method
-            _is_owned(Game, @title) : 
+            is_added(Game, @title) : 
                 return True if title is in db
     '''     
        
@@ -60,7 +60,11 @@ class Vote(models.Model):
         user: reference to associated django.models.User object
         count: votes per user per game
         created: datetime vote was created
-        method vote: increment vote count
+        class method 
+            increment_count(Vote, @game)
+                update vote with count = count + 1,
+                created = datetime.now()
+                
     '''
     game = models.OneToOneField(Game)
     count = models.IntegerField(default=0)
@@ -98,6 +102,12 @@ class UserActivityLog(models.Model):
         User activities
         of add or vote
         are stored
+        classmethod
+            last_acted(UserActivityLog, @user)
+            return datetime of @user's last add or vote
+        classmethod:
+            log_user_activity(UserActivityLog, @user)
+                insert new log entry for @user
     '''
     user = models.ForeignKey(Auth_User)
     created = models.DateTimeField(blank=False)
@@ -173,4 +183,10 @@ class Rating(models.Model):
     
     def __unicode__(self):
         return "%s, %s" % (self.game, self.rating )
+
+    def rate(self, game_id):
+        pass
+
+    def current_rating(self, game_id):
+        pass
 

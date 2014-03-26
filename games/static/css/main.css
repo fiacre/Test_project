@@ -1,0 +1,14 @@
+html, body, div {margin:0;padding:0;}
+body {font-family: Verdana; font-size:10pt;}
+span#who {float:right;}
+div#ribbon {padding: 5px;background-color: #444;color:#DDD;}
+div#ribbon a {color:#DDD;}
+div#content {padding: 5px 20px;}
+div#login {margin: 150px auto;width: 350px;border: 1px solid #444;}
+div#login h3 {background-color: #444;color:#EEE;padding:5px;font-weight:normal;margin:0;}
+div#login div#form div, div#login div#form  p {padding: 9px;text-align:center;}
+div#form label {width:100px;display:block;float:left;text-align:right;}
+th {background-color:#CCC;}
+table {border-collapse: collapse;margin-top:20px;}
+td, th {padding: 5px;border:1px solid #444;}
+div.doc-image {float: left;margin-right:25px;margin-bottom:15px;}
