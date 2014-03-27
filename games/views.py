@@ -154,7 +154,7 @@ def game_vote(request, game_id=''):
             # see if this user has voted or added today
             if _can_act(request.user.username) == False:
                 _log.debug("%s acted today" % request.user)
-                response = _raise_error(reason="You Can Only Vote/Add once a day")
+                response = _error_view(request, msg="You Can Only Vote/Add once a day")
                 return response
              
             # remember to get out and vote! 
@@ -169,7 +169,7 @@ def game_vote(request, game_id=''):
         game = Game.objects.get(pk=game_id)
         if _can_act(request.user.username) == False:
             _log.debug("%s acted in the last day" % request.user)
-            response = _raise_error(reason="You Can't Vote till tomorrow, sorry")
+            response = _error_view(request, msg="You Can't Vote till tomorrow, sorry")
             return response
         else:
             # user can vote
@@ -217,7 +217,7 @@ def game_add(request):
                 # test if user has added or voted today
                 if _can_act(request.user.username) == False:
                     _log.debug("%s acted in the last day" % request.user)
-                    response = _raise_error(reason="You Can Only Vote/Add once a day")
+                    response = _error_view(request, msg="You Can Only Vote/Add once a day")
                     return response
                 # insert since this title exists
                 # this is a vote
