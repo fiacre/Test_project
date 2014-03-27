@@ -27,6 +27,11 @@ _log = logging.getLogger(__name__)
 
 # helper methods
 
+def _error_view(request, msg=''):
+    ''' return status_code 500 in custom view '''
+    return render(request, "games/500.html",
+        { "msg" : msg }, status=500)
+
 def _raise_error(reason=''):
     ''' return status_code 500 '''
     response = HttpResponseServerError(reason)

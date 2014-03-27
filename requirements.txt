@@ -3,5 +3,8 @@ psycopg2==2.5.2
 django-shell-plus==1.1.5
 mock==1.0.1
 pytz
-pysqlite
+pysqlite==2.6.0
 south==0.8.4
+celery[redis]
+supervisor==3.0
+bson==0.3.3

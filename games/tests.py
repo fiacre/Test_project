@@ -20,6 +20,9 @@ from games.views import vote_index, top_votes, \
 
 from games.forms import GameAddForm, GameVoteForm, VoteCountForm
 
+import bson
+from games.json_fuctions import json_encode, decode
+
 class MockDateTime(datetime):
     @classmethod
     def monday_noon(cls):
@@ -222,6 +225,11 @@ class GamesTests(TestCase):
         
         self.assertNotEqual(response.status_code, 200)
         
+    def test_json_fuctions(self):
+        test = {1: True, 2: u"string", 3: 30}
+        json_test = json_encode(test)
+        self.assertIsInstance(json_test, str)
+
 
     @unittest.skip("not working yet")
     def test_vote_on_weekend(self):

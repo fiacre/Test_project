@@ -25,6 +25,11 @@ DATABASES = {
 if 'test' in sys.argv:
     DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
 
+# setup celery
+BROKER_URL = 'redis://localhost:6379/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}  # 1 hour.
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
 SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
