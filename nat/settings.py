@@ -40,7 +40,7 @@ ALLOWED_HOSTS = []
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'US/Central'
+TIME_ZONE = 'US/Eastern'
 USE_TZ = True
 
 # Language code for this installation. All choices can be found here:
@@ -79,7 +79,7 @@ MEDIA_URL = 'http://localhost:8000/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = os.path.join(SITE_ROOT, "static")
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -90,6 +90,9 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    '/home/alee/nerdery/nat/static',
+    '/home/alee/nerdery/nat/games/static',
+    '/var/www/styles',
 )
 
 # List of finder classes that know how to find static files in
@@ -213,7 +216,7 @@ LOGGING = {
 #    },
 ###}
 
-try:
-    from settings_prod import *
-except ImportError:
-    pass
+#try:
+#    from settings_prod import *
+#except ImportError:
+#    pass
